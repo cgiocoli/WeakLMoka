@@ -662,16 +662,17 @@ int main(){
       if(imin<0) imin =0;
       if(jmin<0) jmin =0;
       for(int jj=jmin; jj<=jmax; jj++ ) for(int ii=imin; ii<=imax; ii++ ){
-	  // this need to be in Mpc/h physical!!!
-	  double dx=(x[ii]-fof.ra[i])*Dl;
-	  double dy=(y[jj]-fof.dec[i])*Dl;
+	  double dx=(x[ii]-fof.ra[i]);
+	  double dy=(y[jj]-fof.dec[i]);
 	  double r=sqrt( dx*dx+dy*dy ); 
 	  if(r<=dr){
 	    if(p.cutR>0){
-	      kappa[ii+p.nx*jj]+=nLha->kappaz(r/rs,Rz); 
+	      // this need to be in Mpc/h physical!!!
+	      kappa[ii+p.nx*jj]+=nLha->kappaz(Dl*r/rs,Rz); 
 	    }else{
+	      // this need to be in Mpc/h physical!!!
 	      // if negative consider the integral up to infinity
-	      kappa[ii+p.nx*jj]+=nLha->kappa(r/rs); 
+	      kappa[ii+p.nx*jj]+=nLha->kappa(Dl*r/rs); 
 	    }
 	  }
 	}       
