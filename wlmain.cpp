@@ -30,6 +30,7 @@ struct InputParams{
   std:: string planelist;      // planelist produced by MapSim
   int nx,ny;                   // number of pixels in x and y directions
   double fx,fy;                // size of the field of view in x and y
+  std:: string filsigma;       // file contaning lm s relation used for c-M Zhao
 };
 
 // fof properties
@@ -82,9 +83,13 @@ void readFoF(struct FoF *f, struct InputParams p, struct PlaneList pl){
       double mfof,ra,dec,z,Dc,m200,r200;
       while(ifilin >> id >> mfof >> ra >> dec >> z >> Dc >> m200 >> r200){
 	f->idfof.push_back(id);
-	f->mfof.push_back(mfof);
-	f->ra.push_back(ra);
-	f->dec.push_back(dec);
+	f->mfof.push_back(mfof);	
+	//f->ra.push_back(ra);
+	//f->dec.push_back(dec);
+	// to match the kappa maps from GLAMER-------
+	f->ra.push_back(dec);
+	f->dec.push_back(ra);
+	// -------------------------------------------
 	f->z.push_back(z);
 	f->Dc.push_back(Dc);
 	f->m200.push_back(m200);
@@ -193,7 +198,8 @@ void readInput(struct InputParams *p){
   fin >> p->fx;              // 13. size of the field of view in x
   fin >> str;
   fin >> p->fy;              // 14. size of the field of view in y
-
+  fin >> str;
+  fin >> p->filsigma;        // 15. file with lm s relation to be adopted
   /**
    *  check on cutR:  
    *  this value could be positive or negative ... not null
@@ -224,8 +230,21 @@ void readInput(struct InputParams *p){
   std:: cout << "  plane list file  = " << p->planelist << std:: endl;
   std:: cout << "  nx = " << p->nx << "  ny = " << p->ny << std:: endl;
   std:: cout << "  field of view: x = " << p->fx << "  y = " << p->fy << std:: endl;
+  std:: ifstream fillms;
+  fillms.open(p->filsigma.c_str());
+  if(fillms.is_open()){
+    std:: cout << "  file lm s rel    = " << p->filsigma << std:: endl;    
+  }else{
+    if(p->filsigma=="sim"){
+      std:: cout << " no file for the lm s relation ... I will use Vmax and Rmax from the simulation " << std:: endl;
+      std:: cout << " since filsigma variable is set equal to sim " << std:: endl;
+    }else{
+      std:: cout << " no file for the lm s relation ... I will use Neto08+Bullock01 " << std:: endl;
+    }
+  }
   std:: cout << "  ___________________________________________"  << std:: endl;  
   std:: cout << "  " << std:: endl;    
+  exit(1);
 }
 
 struct gslfparams_fc{
@@ -272,8 +291,9 @@ double getC(double vmax,double rmax,double h){
 }
 
 double getCNeto(double m, double z){
+  // Bullock+01 redshift evolution
   double cm = 4.67*pow(m/1.e+14,-0.11)/(1+z); 
-  return gsl_ran_lognormal (rh,log(cm),0.25);
+  return cm;
 }
 
 // starting will show when the code has been run
@@ -344,6 +364,35 @@ int main(){
   readPlaneList(&pl,p);
   readFoF(&fof,p,pl);
   readSubs(&sub,p,pl);
+  
+  std:: vector<double> lm,s,ls;
+  std:: ifstream fillms;
+  fillms.open(p.filsigma.c_str());
+  if(fillms.is_open()){
+    double a,b;
+    while(fillms>> a >> b){
+      lm.push_back(a);
+      s.push_back(b);
+      ls.push_back(log10(b));
+    }
+    iniTables(&co,lm,ls);
+  }
+  // compare the two cm_relations
+  /*
+  for(int i=0;i<pl.zl.size();i++){
+    std:: vector<double> lx;
+    int nx=128;
+    fill_linear(lx,nx,12.,15.5);
+    double zx = pl.zl[i];
+    for(int j=0;j<nx;j++){
+      double x = pow(10.,lx[j]);
+      double c1 = getCNeto(x,zx);
+      double c2 = getCZhao(&co,x,zx);
+      std:: cout << i << "  " << zx << "  " << x << "  " << c1 << "  " << c2 << std:: endl;
+    }
+  }
+  exit(1);
+  */
   // loop on haloes
   // allocate c200
   fof.c200.resize(fof.nfof);
@@ -352,36 +401,52 @@ int main(){
       // one plane per time
       int planefof = fof.plane[i];
       long idfof = fof.idfof[i];
-      std:: vector<double> vmax,rmax,msub;
-      // std:: cout << i << "  " << fof.mfof[i] << std:: endl;
-      for(int j=0;j<sub.nsub;j++){
-	if(sub.plane[j] == planefof && sub.idfof[j] == idfof){
-	  msub.push_back(sub.msub[j]);
-	  vmax.push_back(sub.vmax[j]);
-	  rmax.push_back(sub.rmax[j]);
-	  // std:: cout << sub.msub[j] << "   " << sub.vmax[j] << "  " << sub.rmax[j] << std:: endl;
+      if(p.filsigma=="sim"){
+	std:: vector<double> vmax,rmax,msub;
+	// std:: cout << i << "  " << fof.mfof[i] << std:: endl;
+	for(int j=0;j<sub.nsub;j++){
+	  if(sub.plane[j] == planefof && sub.idfof[j] == idfof){
+	    msub.push_back(sub.msub[j]);
+	    vmax.push_back(sub.vmax[j]);
+	    rmax.push_back(sub.rmax[j]);
+	    // std:: cout << sub.msub[j] << "   " << sub.vmax[j] << "  " << sub.rmax[j] << std:: endl;
+	  }
 	}
-      }
-      if(msub.size()>0){
-	std:: vector<double> :: iterator itmostmassive = max_element(msub.begin(), msub.end());      
-	double vmaxh = vmax[distance(msub.begin(),itmostmassive)];
-	double rmaxh = rmax[distance(msub.begin(),itmostmassive)];
-	// use the simulation snapshot 
-	double hz = co.hubble(fof.zsnap[i]);
-	// Net et al. 2008 cM relation evolving with z as in Bullock et al. 2010
-	double c = getCNeto(fof.m200[i],fof.zsnap[i]);
-	// use Hz
-	// double c = getC(vmaxh,rmaxh,hz);
-	// use H0 as in Springel et al. 2008 unrealistic redshift evolution!
-	// double c = getC(vmaxh,rmaxh,p.h0);
-	fof.c200[i] = c;
-	if(fof.m200[i]>0){
-	  std:: cout << i << "  " << fof.mfof[i] << "  " << fof.m200[i] << "  " << fof.zsnap[i] << "  " 
-		     << fof.plane[i] << "  "  << c << std:: endl;      
+	if(msub.size()>0){
+	  std:: vector<double> :: iterator itmostmassive = max_element(msub.begin(), msub.end());      
+	  double vmaxh = vmax[distance(msub.begin(),itmostmassive)];
+	  double rmaxh = rmax[distance(msub.begin(),itmostmassive)];
+	  // use the simulation snapshot 
+	  double hz = co.hubble(fof.zsnap[i]);
+	  // use Hz
+	  double c = getC(vmaxh,rmaxh,hz);
+	  // using H0 we have unrealistic redshift evolution ... c too high!
+	  // double c = getC(vmaxh,rmaxh,p.h0);
+	  fof.c200[i] = c;
+	  if(fof.m200[i]>0){
+	    std:: cout << i << "  " << fof.mfof[i] << "  " << fof.m200[i] << "  " << fof.zsnap[i] << "  " 
+		       << fof.plane[i] << "  "  << c << std:: endl;      
+	  }
+	}else{
+	  // not a sub associated!
+	  fof.c200[i] = 0;
 	}
       }else{
-	// not a sub associated!
-	fof.c200[i] = 0;
+	// use the c-M relation models
+	double c;
+	// means have read the lm s file set in the input paramater file
+	if(lm.size()>1){
+	  // Zhat+09 with the parameters of Giocoli+13
+	  // we assign the redshift of the snap for the c-M
+	  c = getCZhao(&co,fof.m200[i],fof.zsnap[i]);
+	}else{
+	  // Neto+08 cM relation evolving with z as in Bullock+10
+	  // we assign the redshift of the snap for the c-M
+	  c = getCNeto(fof.m200[i],fof.zsnap[i]);
+	}
+	// add a log-normal scatter!!!
+	fof.c200[i] = gsl_ran_lognormal (rh,log(c),0.25);
+	
       }
     }
   }
