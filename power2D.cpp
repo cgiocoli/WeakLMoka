@@ -5,7 +5,7 @@ void powerl(std::valarray<float> a,std::valarray<float> b,
 	double boxlx, double boxly,
 	double *ll, double *Pl,int nl){
   // go in the fourir space doing the zero padding
-  int zerosize = 4;
+  int zerosize = 2;
 
   // size of the new map in x and y directions, factor by which each size is increased
   int Nnx=int(zerosize*nx);

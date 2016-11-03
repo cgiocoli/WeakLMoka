@@ -6,7 +6,7 @@
 #####################################################################
 
 # executable name
-PROG = $(HOME)/bin/WL_MOKA.beta
+PROG = $(HOME)/bin/WL_MOKA_1.4
 
 MAIN = wlmain.cpp power2D.cpp cMZhao.cpp
 
@@ -15,7 +15,13 @@ SOURCES = ../Moka/utilities.cpp \
           ../Moka/cosmology.cpp \
           ../Moka/halo.cpp \
           ../Moka/nfwHalo.cpp \
-          ../Moka/nfwLens.cpp 
+          ../Moka/nfwLens.cpp \
+          ../Moka/hernq_Halo.cpp \
+          ../Moka/hernq_Lens.cpp \
+          ../Moka/jaffe_Halo.cpp \
+          ../Moka/jaffe_Lens.cpp \
+          ../Moka/sisHalo.cpp \
+          ../Moka/sisLens.cpp 
 
 # gsl, cfitsio, CCfits, fftw
 LIBS = -L/home/cgiocoli/lib/gsl-1.13/lib  -lgslcblas -lgsl \
@@ -55,7 +61,7 @@ main:
 	$(CC) $(MAIN) -L. -lmoka $(CFLAGS) -o $(PROG) $(LIBS) 
 
 clean:
-	$(RM) $(PROG) $(OBJ) *.o *a
+	$(RM) $(PROG) $(OBJ) *.o *.a
 
 lib:
 	$(CC) -c $(SOURCES) $(CFLAGS)

@@ -9,5 +9,5 @@
 
 double getS(double mi);
 void iniTables(cosmology *cosmology, std:: vector<double> lm, std:: vector<double> ls);
-double getCZhao(cosmology *cosmology, double mass, double redshift);
+double getCZhao(cosmology *cosmology, double mass, double redshift, std:: string vir="200");
  

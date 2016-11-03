@@ -27,7 +27,7 @@ void iniTables(cosmology *cosmology, std:: vector<double> lm, std:: vector<doubl
   }
 }
 
-double getCZhao(cosmology *cosmology, double mass, double redshift){
+double getCZhao(cosmology *cosmology, double mass, double redshift,std:: string vir){
   if(Zlm.size()<1){
     std:: cout << " masses and variances not properly initialized! " << std:: endl;
     std:: cout << " check this out! ... or lead the correct file for this " << std:: endl;
@@ -35,7 +35,12 @@ double getCZhao(cosmology *cosmology, double mass, double redshift){
     exit(1);
   }
   double f = 0.04;
-  double alphaf = 1.365/pow(f,0.65)*exp(-2.0*f*f*f);
+  double alphaf;
+  if(vir=="200"){
+    alphaf = 1.356/pow(f,0.65)*exp(-2.0*f*f*f);
+  }else{
+    alphaf = 0.815/pow(f,0.707)*exp(-2.0*f*f*f);
+  }
   double wf = sqrt(2*log(alphaf+1));
   double dcf = cosmology->deltaC(redshift)/
     (cosmology->growthFactor(1./(1+redshift))/cosmology->growthFactor(1.)/(1.+redshift)) + 
@@ -43,8 +48,15 @@ double getCZhao(cosmology *cosmology, double mass, double redshift){
   double zf = -1 + pow(10.,getY(Zdci,Zlzi,dcf));
   double t0 = cosmology->time(redshift);
   double tf = cosmology->time(zf);
-  // equation 23 Giocoli+13
-  return 4.*pow(  1 + pow(t0/3.2/tf,8.),1./13.);
+  if(vir=="200"){
+    // equation (23) Giocoli+13
+    return 4.*pow(  1 + pow(t0/3.2/tf,8.),1./13.);
+  }else{
+    // standard
+    return 4.*pow(  1 + pow(t0/3.75/tf,8.4),1./8.);
+    // increased by \sigma_8
+    // return 4.78*pow(  1 + pow(t0/3.75/tf,10.41),1./8.);
+  }
 }
 
 
