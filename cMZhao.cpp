@@ -37,7 +37,7 @@ double getCZhao(cosmology *cosmology, double mass, double redshift,std:: string 
   double f = 0.04;
   double alphaf;
   if(vir=="200"){
-    alphaf = 1.356/pow(f,0.65)*exp(-2.0*f*f*f);
+    alphaf = 1.365/pow(f,0.65)*exp(-2.0*f*f*f);
   }else{
     alphaf = 0.815/pow(f,0.707)*exp(-2.0*f*f*f);
   }

@@ -1,12 +1,12 @@
 #####################################################################
 #                                                                   #
-#               Make file for MOKA                                  #
+#               Make file for WL_MOKA                               #
 #                                                                   #
 #                         cgiocoli@gmail.com                        #
 #####################################################################
 
 # executable name
-PROG = $(HOME)/bin/WL_MOKA_1.4
+PROG = $(HOME)/bin/WL_MOKA_1.42
 
 MAIN = wlmain.cpp power2D.cpp cMZhao.cpp
 
@@ -16,31 +16,33 @@ SOURCES = ../Moka/utilities.cpp \
           ../Moka/halo.cpp \
           ../Moka/nfwHalo.cpp \
           ../Moka/nfwLens.cpp \
-          ../Moka/hernq_Halo.cpp \
+	  ../Moka/hernq_Halo.cpp \
           ../Moka/hernq_Lens.cpp \
           ../Moka/jaffe_Halo.cpp \
           ../Moka/jaffe_Lens.cpp \
-          ../Moka/sisHalo.cpp \
-          ../Moka/sisLens.cpp 
+	  ../Moka/sisHalo.cpp \
+          ../Moka/sisLens.cpp	
+
 
 # gsl, cfitsio, CCfits, fftw
-LIBS = -L/home/cgiocoli/lib/gsl-1.13/lib  -lgslcblas -lgsl \
-       -L/home/cgiocoli/lib/cfitsio/lib \
-       -L/home/cgiocoli/lib/CCfits/lib -lCCfits -lcfitsio \
-       -L/home/cgiocoli/lib/fftw-3.2.2/lib -lfftw3 -lm 
+LIBS = -L/marconi/home/userexternal/cgiocoli/lib/gsl-1.13/lib  -lgslcblas -lgsl \
+       -L/marconi/home/userexternal/cgiocoli/lib/cfitsio/lib \
+       -L/marconi/home/userexternal/cgiocoli/lib/CCfits/lib -lCCfits -lcfitsio \
+       -L/marconi/home/userexternal/cgiocoli/lib/fftw-3.2.2/lib -lfftw3 -lm 
 
 # gsl, cfitsio, CCfits, fftw  
-ALLFLAGS = -I/home/cgiocoli/lib/gsl-1.13/include/gsl \
-	   -I/home/cgiocoli/lib/gsl-1.13/include \
-           -I/home/cgiocoli/lib/cfitsio/include \
-           -I/home/cgiocoli/lib/CCfits/include \
-           -I/home/cgiocoli/lib/fftw-3.2.2/include
+ALLFLAGS = -I/marconi/home/userexternal/cgiocoli/lib/gsl-1.13/include/gsl \
+	   -I/marconi/home/userexternal/cgiocoli/lib/gsl-1.13/include \
+           -I/marconi/home/userexternal/cgiocoli/lib/cfitsio/include \
+           -I/marconi/home/userexternal/cgiocoli/lib/CCfits/include \
+           -I/marconi/home/userexternal/cgiocoli/lib/fftw-3.2.2/include
 
 # 
 DEBUG = -g 
 # compiler -Wall # use this to optimize -O2 
 #CC = gcc -stdlib=libstdc++ -std=c++11 
-CC = /usr/bin/gcc -std=c++0x
+#CC = /usr/bin/gcc -std=c++0x
+CC = /usr/bin/cc -std=c++11 -lstdc++ -Ofast
 #
 RM = rm -f -r
 #
@@ -61,7 +63,7 @@ main:
 	$(CC) $(MAIN) -L. -lmoka $(CFLAGS) -o $(PROG) $(LIBS) 
 
 clean:
-	$(RM) $(PROG) $(OBJ) *.o *.a
+	$(RM) $(PROG) $(OBJ) *.o *a
 
 lib:
 	$(CC) -c $(SOURCES) $(CFLAGS)
@@ -96,3 +98,4 @@ help:
 	@echo
 	@echo  website: http://cgiocoli.wordpress.com/research-interests/moka
 	@echo
+
